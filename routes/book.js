@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { Book } = require('../models');
 const book = require('../models/book');
-const { where } = require('sequelize');
-const e = require('express');
 
 // 전체 도서 불러오기 API
 router.get('/', async(req, res) => {
     try {
         const data = await Book.findAll();
-        res.status(200).json(data);
+        const format = data.map(book => ({
+            ...book.toJSON(), rating: Number(book.rating).toFixed(1)
+        }));
+        res.status(200).json(format);
     } catch(error) {
         res.status(400).json({error: '데이터 조회 실패입니다.', details: error.message});
     }
@@ -23,7 +24,8 @@ router.get('/:id', async(req, res) => {
 
         if (data == null) {return res.status(404).json({error: '찾는 도서가 없습니다.'})};
 
-        res.status(200).json(data);
+        const format = data.toJSON();
+        res.status(200).json({...format, rating: Number(format.rating || 0).toFixed(1)});
     } catch(error) {
         res.status(400).json({error: '데이터 조회 실패입니다.', details: error.message});
     }
