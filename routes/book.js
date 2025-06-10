@@ -70,17 +70,22 @@ router.put('/:id', async(req, res) => {
         // 각 받아온 데이터들의 유효성을 검사
         if(!title.trim()) {return res.status(400).json({error: 'title 항목은 공백으로 작성이 불가능합니다.'})};
         if(!author.trim()) {return res.status(400).json({error: 'author 항목은 공백으로 작성이 불가능합니다.'})};
-        if(!isNaN(rating)) {return res.status(400).json({error: 'rating 항목은 소수점 숫자만 사용가능합니다. (ex. 0.0)'})};
-        if (!isValidRating(rating)) {return res.status(400).json({error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)'})};
+        if(isNaN(rating)) {return res.status(400).json({error: 'rating 항목은 소수점 숫자만 사용가능합니다. (ex. 0.0)'})};
+        if(rating != null) {
+            if (!isValidRating(rating)) {return res.status(400).json({error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)'})};
+        }
         if(rating < 0.0 || rating > 5.0) {return res.status(400).json({error: 'rating 항목은 0.0 ~ 5.0까지 사용가능합니다.'})};
         if(!isValidDate(publishedDate)){return res.status(400).json({error: '날짜 형식은 YYYY-MM-DD 이어야 합니다. (ex. 2025-06-09)'})}
+
+        const data = await Book.findByPk(bookId);
+        if (data == null) {return res.status(404).json({error: '찾는 도서가 없습니다.'})};
 
         const[updated] = await Book.update(
             {title, author, publishedDate, rating},
             {where: {id : bookId}}
         );
 
-        if(updated == 0) {return res.status(404).json({error: '찾는 도서가 없습니다.'})};
+        if(updated == 0) {return res.status(400).json({error: '도서의 정보가 수정 전과 같습니다.'})};
 
         const updatedBook = await Book.findByPk(bookId);
         res.status(200).json(updatedBook);
@@ -100,7 +105,9 @@ router.patch('/:id', async(req, res) => {
         if(!title.trim()) {return res.status(400).json({error: 'title 항목은 공백으로 작성이 불가능합니다.'})};
         if(!author.trim()) {return res.status(400).json({error: 'author 항목은 공백으로 작성이 불가능합니다.'})};
         if(isNaN(rating)) {return res.status(400).json({error: 'rating 항목은 소수점 숫자만 사용가능합니다. (ex. 0.0)'})};
-        if (!isValidRating(rating)) {return res.status(400).json({error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)'})};
+        if (rating != null) {
+            if (!isValidRating(rating)) {return res.status(400).json({error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)'})};
+        }
         if(rating < 0.0 || rating > 5.0) {return res.status(400).json({error: 'rating 항목은 0.0 ~ 5.0까지 사용가능합니다.'})};
         if(!isValidDate(publishedDate)){return res.status(400).json({error: '날짜 형식은 YYYY-MM-DD 이어야 합니다. (ex. 2025-06-09)'})}
 
