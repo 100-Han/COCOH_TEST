@@ -80,7 +80,7 @@ router.get('/books/:id', bookController.getBook);
  *                        - name
  *                        - author
  *                      properties:
- *                          name:
+ *                          title:
  *                            type: string
  *                            description: 책 제목
  *                            example: "Node.js 초보 가이드북"
@@ -119,6 +119,13 @@ router.post('/books', bookController.postBook);
  *          summary: "특정 책 정보 전체 수정하기"
  *          description: "PUT방식으로 요청"
  *          tags: [Books]
+ *          parameters:
+ *              - in: path
+ *                name: id
+ *                required: true
+ *                schema:
+ *                  type: string
+ *                description: 조회할 책의 ID
  *          requestBody:
  *              required: true
  *              content:
@@ -126,13 +133,11 @@ router.post('/books', bookController.postBook);
  *                  schema:
  *                      type: object
  *                      required:
+ *                        - id
  *                        - name
  *                        - author
  *                      properties:
- *                          id:
- *                            type: number
- *                            description: 
- *                          name:
+ *                          title:
  *                            type: string
  *                            description: 책 제목
  *                            example: "Node.js 초보 가이드북"
@@ -140,14 +145,14 @@ router.post('/books', bookController.postBook);
  *                            type: string
  *                            description: 저자
  *                            example: "홍길동"
- *                          publisheDate:
+ *                          publishedDate:
  *                            type: string
  *                            description: 발간날짜
  *                            example: "2025-06-10"
  *                          rating:
- *                            type: number
+ *                            type: string
  *                            description: 평점 (0.0) ~ (5.0)
- *                            example: 5.0
+ *                            example: "5.0"
  *          responses:
  *              "200":
  *                  description: 전체 유저 정보
@@ -162,5 +167,59 @@ router.post('/books', bookController.postBook);
  *                              type: object
  */
 router.put('/books/:id', bookController.putBook);
+
+/**
+ * @swagger
+ * paths:
+ *  /books/{id}:
+ *      patch:
+ *          summary: "특정 책 정보 일부 정보 수정하기"
+ *          description: "PATCH방식으로 요청"
+ *          tags: [Books]
+ *          parameters:
+ *              - in: path
+ *                name: id
+ *                required: true
+ *                schema:
+ *                  type: string
+ *                description: 조회할 책의 ID
+ *          requestBody:
+ *              required: true
+ *              content:
+ *                application/json:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          title:
+ *                            type: string
+ *                            description: 책 제목
+ *                            example: "Node.js 초보 가이드북"
+ *                          author:
+ *                            type: string
+ *                            description: 저자
+ *                            example: "홍길동"
+ *                          publishedDate:
+ *                            type: string
+ *                            description: 발간날짜
+ *                            example: "2025-06-10"
+ *                          rating:
+ *                            type: number
+ *                            format: float
+ *                            description: 평점 (0.0) ~ (5.0)
+ *                            example: 4.5
+ *          responses:
+ *              "200":
+ *                  description: 전체 유저 정보
+ *                  content:
+ *                      application/json:
+ *                         schema:
+ *                         type: object
+ *                         properties:
+ *                          ok:
+ *                              type: boolean
+ *                          books:
+ *                              type: object
+ */
+router.patch('/books/:id', bookController.patchBook);
 
 module.exports = router;

@@ -68,8 +68,8 @@ exports.putBook = async(req, res) => {
         const {title, author, publishedDate, rating} = req.body;
 
         // 각 받아온 데이터들의 유효성을 검사
-        if(!title.trim()) {return res.status(400).json({error: 'title 항목은 공백으로 작성이 불가능합니다.'})};
-        if(!author.trim()) {return res.status(400).json({error: 'author 항목은 공백으로 작성이 불가능합니다.'})};
+        if(!title || !title.trim()) {return res.status(400).json({error: 'title 항목은 공백으로 작성이 불가능합니다.'})};
+        if(!author || !author.trim()) {return res.status(400).json({error: 'author 항목은 공백으로 작성이 불가능합니다.'})};
         if(isNaN(rating)) {return res.status(400).json({error: 'rating 항목은 소수점 숫자만 사용가능합니다. (ex. 0.0)'})};
         if(rating != null) {
             if (!isValidRating(rating)) {return res.status(400).json({error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)'})};
@@ -96,37 +96,69 @@ exports.putBook = async(req, res) => {
 };
 
 // 특정 도서 특정 정보 수정 API
-router.patch('/:id', async(req, res) => {
+exports.patchBook = async(req, res) => {
     try {
         const bookId = req.params.id;
-        const {title, author, publishedDate, rating} = req.body;
+        const { title, author, publishedDate, rating } = req.body;
 
-        // 각 받아온 데이터들의 유효성을 검사
-        if(!title.trim()) {return res.status(400).json({error: 'title 항목은 공백으로 작성이 불가능합니다.'})};
-        if(!author.trim()) {return res.status(400).json({error: 'author 항목은 공백으로 작성이 불가능합니다.'})};
-        if(isNaN(rating)) {return res.status(400).json({error: 'rating 항목은 소수점 숫자만 사용가능합니다. (ex. 0.0)'})};
-        if (rating != null) {
-            if (!isValidRating(rating)) {return res.status(400).json({error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)'})};
+        const updateFields = {};
+
+        if (title !== undefined) {
+            if (typeof title !== 'string' || !title.trim()) {
+                return res.status(400).json({ error: 'title 항목은 공백으로 작성이 불가능합니다.' });
+            }
+            updateFields.title = title;
         }
-        if(rating < 0.0 || rating > 5.0) {return res.status(400).json({error: 'rating 항목은 0.0 ~ 5.0까지 사용가능합니다.'})};
-        if(!isValidDate(publishedDate)){return res.status(400).json({error: '날짜 형식은 YYYY-MM-DD 이어야 합니다. (ex. 2025-06-09)'})}
+
+        if (author !== undefined) {
+            if (typeof author !== 'string' || !author.trim()) {
+                return res.status(400).json({ error: 'author 항목은 공백으로 작성이 불가능합니다.' });
+            }
+            updateFields.author = author;
+        }
+
+        if (rating !== undefined) {
+            if (isNaN(rating)) {
+                return res.status(400).json({ error: 'rating 항목은 소수점 숫자만 사용가능합니다. (ex. 0.0)' });
+            }
+            if (!isValidRating(rating)) {
+                return res.status(400).json({ error: 'rating 항목은 반드시 소수점을 포함해야 합니다. (ex. 0.0)' });
+            }
+            if (rating < 0.0 || rating > 5.0) {
+                return res.status(400).json({ error: 'rating 항목은 0.0 ~ 5.0까지 사용가능합니다.' });
+            }
+            updateFields.rating = rating;
+        }
+
+        if (publishedDate !== undefined) {
+            if (!isValidDate(publishedDate)) {
+                return res.status(400).json({ error: '날짜 형식은 YYYY-MM-DD 이어야 합니다. (ex. 2025-06-09)' });
+            }
+            updateFields.publishedDate = publishedDate;
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ error: '변경할 데이터가 없습니다.' });
+        }
 
         const book = await Book.findByPk(bookId);
+        if (!book) {
+            return res.status(404).json({ error: '찾는 도서가 없습니다.' });
+        }
 
-        if(!book) {return res.status(404).json({error: '찾는 도서가 없습니다.'})};
+        const [updated] = await Book.update(updateFields, { where: { id: bookId } });
 
-        if (title) {book.title = title};
-        if (author) {book.author = author};
-        if (publishedDate) {book.publishedDate = publishedDate};
-        if (rating) {book.rating = rating};
+        if (updated === 0) {
+            return res.status(400).json({ error: '도서의 정보가 수정 전과 같습니다.' });
+        }
 
-        await book.save();
-        res.status(200).json(book);
+        const updatedBook = await Book.findByPk(bookId);
+        return res.status(200).json(updatedBook);
 
     } catch(error) {
         res.status(400).json({error: '데이터 수정에 실패하였습니다.', details: error.message});
     }
-})
+};
 
 // 특정 도서 삭제 API
 router.delete('/:id', async(req, res) => {
